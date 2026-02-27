@@ -2,116 +2,273 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Drawer } from "vaul";
 import {
   ShieldAlert,
   Activity,
   PhoneCall,
-  Phone,
   MessageCircle,
   Facebook,
-  Map,
-  ChevronUp,
-  ChevronDown,
   Building2,
+  ChevronRight,
+  ChevronDown,
+  MapPin,
+  Flag,
+  Shield,
+  Users,
+  Landmark,
+  Building,
+  Phone,
+  ExternalLink,
+  Lock as LockIcon,
 } from "lucide-react";
+import { ContactCard } from "@/src/components/ContactCard";
 
-// --- MOCK DATA RÚT GỌN ĐỂ DEMO GIAO DIỆN ---
+// 1. CẤU TRÚC CÁC CẤP THÔN (Toàn làng bị Disabled như đã fix)
+const SECTIONS = [
+  {
+    id: "lang",
+    label: "Cấp Toàn Làng Phương Viên",
+    disabled: true,
+    message: "Đang cập nhật",
+  },
+  { id: "thon1", label: "Thôn Phương Viên 1" },
+  { id: "thon2", label: "Thôn Phương Viên 2" },
+  { id: "thon3", label: "Thôn Phương Viên 3" },
+  { id: "thon4", label: "Thôn Phương Viên 4" },
+];
+
+// 2. CẤU HÌNH MÀU SẮC & ICON
+const CATEGORY_STYLES: Record<string, any> = {
+  "Cấp ủy chi bộ": {
+    bg: "bg-slate-50",
+    border: "border-slate-200",
+    text: "text-slate-800",
+    iconBg: "bg-slate-200",
+    iconColor: "text-slate-600",
+    icon: Flag,
+  },
+  "Ban lãnh đạo thôn": {
+    bg: "bg-blue-50/50",
+    border: "border-blue-200",
+    text: "text-blue-800",
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    icon: Building,
+  },
+  "An ninh trật tự": {
+    bg: "bg-red-50/50",
+    border: "border-red-200",
+    text: "text-red-800",
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    icon: Shield,
+  },
+  "Trưởng các chi hội đoàn thể": {
+    bg: "bg-emerald-50/50",
+    border: "border-emerald-200",
+    text: "text-emerald-800",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    icon: Users,
+  },
+  "Ban trị sự": {
+    bg: "bg-teal-50/50",
+    border: "border-teal-200",
+    text: "text-teal-800",
+    iconBg: "bg-teal-100",
+    iconColor: "text-teal-600",
+    icon: Landmark,
+  },
+  "Trưởng các xóm": {
+    bg: "bg-sky-50/50",
+    border: "border-sky-200",
+    text: "text-sky-800",
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    icon: MapPin,
+  },
+  default: {
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+    text: "text-gray-800",
+    iconBg: "bg-gray-200",
+    iconColor: "text-gray-600",
+    icon: Users,
+  },
+};
+
+// 3. MOCK DATA
 const mockContacts = [
   {
-    id: "1",
+    id: "L1",
+    scope: "lang",
+    category: "Ban Lãnh đạo chung",
+    categoryDesc: "Cơ quan quản lý cấp Làng",
+    fullName: "Ban tổ chức Làng Phương Viên",
+    role: "Ban quản lý",
+    phone: "0987654321",
+    displayType: "highlight",
+  },
+
+  {
+    id: "T4_1",
+    scope: "thon4",
+    category: "Cấp ủy chi bộ",
+    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     fullName: "Ông Nguyễn Chí Luận",
     role: "Bí thư Chi bộ",
     phone: "0904358480",
-    category: "Cấp ủy chi bộ thôn Phương Viên",
-    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     displayType: "highlight",
   },
   {
-    id: "2",
+    id: "T4_2",
+    scope: "thon4",
+    category: "Cấp ủy chi bộ",
+    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     fullName: "Ông Đàm Thế Việt",
     role: "Phó Bí thư Chi bộ",
     phone: "0705745216",
-    category: "Cấp ủy chi bộ thôn Phương Viên",
-    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     displayType: "highlight",
   },
   {
-    id: "3",
+    id: "T4_3",
+    scope: "thon4",
+    category: "Cấp ủy chi bộ",
+    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     fullName: "Bà Đàm Thị Đông Hà",
     role: "Chi ủy viên",
     phone: "0911223344",
-    category: "Cấp ủy chi bộ thôn Phương Viên",
-    categoryDesc: "Cơ quan lãnh đạo toàn diện",
     displayType: "normal",
   },
+
   {
-    id: "4",
-    fullName: "Ông Đàm Thế Việt",
-    role: "Trưởng Ban Công tác Mặt trận",
-    phone: "0705745216",
+    id: "T4_4",
+    scope: "thon4",
+    category: "Ban lãnh đạo thôn",
+    categoryDesc: "Cơ quan quản lý hành chính nhà nước tại cơ sở",
+    fullName: "Ông Nguyễn Văn Trưởng",
+    role: "Trưởng thôn Phương Viên 4",
+    phone: "0912111222",
+    displayType: "highlight",
+  },
+
+  {
+    id: "T4_5",
+    scope: "thon4",
+    category: "An ninh trật tự",
+    categoryDesc: "Lực lượng bảo vệ bình yên xóm làng",
+    fullName: "Ông Hoàng Văn An",
+    role: "Trưởng ban An ninh",
+    phone: "0988777666",
+    displayType: "highlight",
+  },
+
+  {
+    id: "T4_6",
+    scope: "thon4",
     category: "Trưởng các chi hội đoàn thể",
     categoryDesc: "Hệ thống chính trị - xã hội",
+    fullName: "Ông Đàm Thế Việt",
+    role: "Trưởng Ban CT Mặt trận",
+    phone: "0705745216",
     displayType: "normal",
   },
   {
-    id: "5",
+    id: "T4_7",
+    scope: "thon4",
+    category: "Trưởng các chi hội đoàn thể",
+    categoryDesc: "Hệ thống chính trị - xã hội",
+    fullName: "Nguyễn Phạm Khắc Hà",
+    role: "Bí thư Chi đoàn",
+    phone: "0966778899",
+    displayType: "highlight",
+  },
+  {
+    id: "T4_8",
+    scope: "thon4",
+    category: "Trưởng các chi hội đoàn thể",
+    categoryDesc: "Hệ thống chính trị - xã hội",
     fullName: "Ông Đàm Phượng Sào",
     role: "Chi hội trưởng Hội NCT",
     phone: "0933445566",
-    category: "Trưởng các chi hội đoàn thể",
-    categoryDesc: "Hệ thống chính trị - xã hội",
     displayType: "normal",
+  },
+
+  {
+    id: "T4_10",
+    scope: "thon4",
+    category: "Ban trị sự",
+    categoryDesc: "Quản lý di tích văn hóa tín ngưỡng",
+    fullName: "Ông Nguyễn Văn Tín",
+    role: "Trưởng ban Trị sự",
+    phone: "0933222111",
+    displayType: "normal",
+  },
+  {
+    id: "T4_11",
+    scope: "thon4",
+    category: "Trưởng các xóm",
+    categoryDesc: "Cánh tay nối dài của chính quyền thôn",
+    fullName: "Ông Trần Văn Xóm",
+    role: "Trưởng xóm 1",
+    phone: "0922111000",
+    displayType: "normal",
+  },
+
+  {
+    id: "T1_1",
+    scope: "thon1",
+    category: "Cấp ủy chi bộ",
+    categoryDesc: "Cơ quan lãnh đạo toàn diện",
+    fullName: "Bà Lê Thị C",
+    role: "Bí thư Chi bộ Thôn 1",
+    phone: "0933445566",
+    displayType: "highlight",
   },
 ];
 
 export default function DirectoryLandingPage() {
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    "Cấp ủy chi bộ thôn Phương Viên": true,
-    "Trưởng các chi hội đoàn thể": true,
-  });
+  const [expandedThon, setExpandedThon] = useState<string>("thon4");
 
-  const toggleSection = (category: string) => {
-    setOpenSections((prev) => ({ ...prev, [category]: !prev[category] }));
+  // SỬA ĐỔI 1: Đổi State thành string để chỉ lưu 1 tab duy nhất được mở
+  const [expandedCategory, setExpandedCategory] = useState<string>("");
+
+  const getContactsForSection = (sectionId: string) => {
+    const filtered = mockContacts.filter((c) => c.scope === sectionId);
+    return filtered.reduce(
+      (acc, contact) => {
+        if (!acc[contact.category])
+          acc[contact.category] = { desc: contact.categoryDesc, items: [] };
+        acc[contact.category].items.push(contact);
+        return acc;
+      },
+      {} as Record<string, { desc: string; items: typeof mockContacts }>,
+    );
   };
 
-  const groupedContacts = mockContacts.reduce(
-    (acc, contact) => {
-      if (!acc[contact.category]) {
-        acc[contact.category] = {
-          title: contact.category,
-          desc: contact.categoryDesc,
-          items: [],
-        };
-      }
-      acc[contact.category].items.push(contact);
-      return acc;
-    },
-    {} as Record<
-      string,
-      { title: string; desc: string; items: typeof mockContacts }
-    >,
-  );
+  // SỬA ĐỔI 2: Hàm toggle chỉ giữ lại 1 trạng thái
+  const toggleCategory = (catKey: string) => {
+    setExpandedCategory((prev) => (prev === catKey ? "" : catKey));
+  };
 
   return (
-    <div className="min-h-screen bg-[#F4F7FB] pb-12 font-sans text-gray-800">
-      {/* --- THÊM MỚI: HEADER STICKY Ở TRÊN CÙNG --- */}
+    <div className="min-h-screen bg-[#F4F7FB] font-sans text-gray-800">
       <header className="bg-[#122A54] text-white p-3 md:p-4 flex items-center gap-3 sticky top-0 z-50 shadow-md">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm">
-          {/* Thay icon này bằng thẻ <img src="/logo.png" /> nếu bạn có ảnh logo thật của thôn */}
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm">
           <Building2 className="text-[#122A54] w-full h-full" />
         </div>
         <div className="flex flex-col">
-          <h1 className="font-extrabold text-[15px] md:text-lg leading-tight uppercase tracking-wide">
-            Thôn Phương Viên
+          <h1 className="font-extrabold text-[15px] leading-tight uppercase tracking-wide">
+            Phương Viên
           </h1>
-          <span className="text-[12px] md:text-sm text-blue-200 font-medium">
+          <span className="text-[12px] text-blue-200 font-medium">
             Cổng Danh bạ Điện tử
           </span>
         </div>
       </header>
-      {/* ------------------------------------------- */}
 
-      {/* HERO SECTION */}
       <section className="bg-gradient-to-b from-[#1a365d] to-[#2a4365] pt-10 pb-24 px-4 text-center relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-10"
@@ -121,16 +278,14 @@ export default function DirectoryLandingPage() {
             backgroundSize: "24px 24px",
           }}
         ></div>
-
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 p-2 border-4 border-white/20">
             <div className="w-full h-full rounded-full border-2 border-dashed border-blue-900 flex items-center justify-center text-blue-900 font-bold text-xs">
               LOGO
             </div>
           </div>
-
           <h2 className="text-white text-3xl md:text-4xl font-extrabold tracking-wide uppercase shadow-sm">
-            THÔN PHƯƠNG VIÊN
+            LÀNG PHƯƠNG VIÊN
           </h2>
           <p className="text-blue-100 mt-2 font-medium text-base md:text-lg">
             Xã Sơn Đồng, Thành phố Hà Nội
@@ -141,183 +296,358 @@ export default function DirectoryLandingPage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto px-4 -mt-10 relative z-20 space-y-6">
-        {/* Quick Links */}
-        <div className="grid grid-cols-3 gap-3 md:gap-6">
-          {[
-            {
-              icon: <MessageCircle className="text-blue-500" size={28} />,
-              name: "Zalo Thôn",
-            },
-            {
-              icon: <Facebook className="text-blue-600" size={28} />,
-              name: "Fanpage",
-            },
-            {
-              icon: <Map className="text-red-500" size={28} />,
-              name: "Tour thực tế ảo",
-            },
-          ].map((link, idx) => (
-            <a
-              key={idx}
-              href="#"
-              className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center text-center gap-2 group border border-gray-100"
-            >
-              <div className="p-3 bg-gray-50 rounded-full group-hover:bg-blue-50 transition-colors">
-                {link.icon}
-              </div>
-              <span className="font-semibold text-[13px] md:text-sm text-gray-700">
-                {link.name}
-              </span>
-            </a>
-          ))}
-        </div>
-
-        {/* Khẩn Cấp */}
-        <section className="bg-[#FFF5F5] p-5 rounded-2xl border border-red-100 shadow-sm space-y-4">
-          <h2 className="text-red-600 font-bold text-sm flex items-center gap-2">
-            <ShieldAlert size={20} /> SỐ ĐIỆN THOẠI KHẨN CẤP
+      <main className="max-w-4xl mx-auto px-4 -mt-10 relative z-20 space-y-6">
+        {/* KHẨN CẤP */}
+        <section className="bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-md space-y-4">
+          <h2 className="text-red-600 font-bold text-sm flex items-center justify-center gap-2 uppercase tracking-wide">
+            <ShieldAlert size={20} /> Số điện thoại khẩn cấp
           </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          <div className="flex flex-col gap-3">
             <a
               href="tel:02433221668"
-              className="flex items-center justify-between p-4 rounded-xl text-white shadow-sm hover:opacity-90 transition-all bg-[#DC2626]"
+              className="flex items-center justify-between p-4 rounded-xl text-white shadow-sm active:scale-95 transition-transform bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700"
             >
-              <div className="flex items-center gap-3 font-semibold">
-                <ShieldAlert size={22} /> GỌI CÔNG AN XÃ
+              <div className="flex items-center gap-3 font-semibold text-[15px]">
+                <ShieldAlert size={22} /> Gọi Công an Xã
               </div>
-              <PhoneCall size={20} className="opacity-80" />
+              <PhoneCall size={20} className="opacity-90" />
             </a>
-            <a
-              href="tel:0912345670"
-              className="flex items-center justify-between p-4 rounded-xl text-white shadow-sm hover:opacity-90 transition-all bg-[#0284C7]"
-            >
-              <div className="flex items-center gap-3 font-semibold">
-                <Activity size={22} /> GỌI TRẠM Y TẾ
-              </div>
-              <PhoneCall size={20} className="opacity-80" />
-            </a>
-            <a
-              href="tel:0987654321"
-              className="flex items-center justify-between p-4 rounded-xl text-white shadow-sm hover:opacity-90 transition-all bg-[#F59E0B]"
-            >
-              <div className="flex items-center gap-3 font-semibold">
-                <Phone size={22} /> GỌI TRƯỞNG THÔN
-              </div>
-              <PhoneCall size={20} className="opacity-80" />
-            </a>
+            <div className="grid grid-cols-2 gap-3">
+              <a
+                href="tel:0912345678"
+                className="flex flex-col items-center justify-center p-3 rounded-xl text-white shadow-sm active:scale-95 transition-transform bg-[#0284C7]"
+              >
+                <ShieldAlert size={22} className="mb-1 opacity-90" />
+                <span className="font-semibold text-[13px] md:text-sm text-center">
+                  CSKV Phụ trách
+                </span>
+              </a>
+              <a
+                href="tel:0987654321"
+                className="flex flex-col items-center justify-center p-3 rounded-xl text-white shadow-sm active:scale-95 transition-transform bg-[#F59E0B]"
+              >
+                <Activity size={22} className="mb-1 opacity-90" />
+                <span className="font-semibold text-[13px] md:text-sm text-center">
+                  Trạm Y Tế Xã
+                </span>
+              </a>
+            </div>
+            <p className="text-center text-xs text-gray-500 mt-1 font-medium">
+              Công an xã (SĐT2): 024.3322.1668
+            </p>
           </div>
-          <p className="text-center text-xs text-gray-500 mt-2 font-medium">
-            Công an xã (SĐT2): 024.3322.1668
-          </p>
         </section>
 
-        {/* Banner Hướng dẫn */}
-        <div className="bg-[#E0F2FE] text-[#0369A1] text-center text-[13px] md:text-sm p-4 rounded-xl font-bold uppercase tracking-wide border border-blue-100 shadow-sm">
-          Nhân dân vui lòng bấm vào mục thông tin bên dưới để xem chi tiết danh
-          bạ liên hệ
+        {/* QUICK LINKS & VAUL DRAWER */}
+        <div className="grid grid-cols-2 gap-4">
+          <Drawer.Root>
+            <Drawer.Trigger asChild>
+              <button className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center text-center gap-2 border border-gray-100 active:scale-95">
+                <div className="p-3 bg-blue-50 rounded-full text-blue-500">
+                  <MessageCircle size={26} />
+                </div>
+                <span className="font-bold text-[14px] text-gray-700">
+                  Zalo Cư Dân
+                </span>
+              </button>
+            </Drawer.Trigger>
+            <Drawer.Portal>
+              <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[60]" />
+              <Drawer.Content className="bg-gray-100 flex flex-col rounded-t-[24px] mt-24 fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh]">
+                <div className="p-4 bg-white rounded-t-[24px] flex-1 overflow-y-auto">
+                  <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-6" />
+                  <Drawer.Title className="font-black text-xl mb-1 text-center text-gray-800">
+                    Chọn Nhóm Zalo
+                  </Drawer.Title>
+                  <Drawer.Description className="text-center text-gray-500 text-sm mb-6">
+                    Tham gia nhóm cư dân để cập nhật thông tin
+                  </Drawer.Description>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl font-bold text-gray-400 border border-gray-100 cursor-not-allowed select-none">
+                      <div className="flex flex-col items-start gap-1 md:flex-row md:items-center md:gap-3">
+                        <span>Nhóm Zalo Toàn Làng</span>
+                        <span className="text-[10px] font-bold bg-gray-200 text-gray-500 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          Đang cập nhật
+                        </span>
+                      </div>
+                      <LockIcon size={18} className="text-gray-300" />
+                    </div>
+                    {[1, 2, 3, 4].map((num) => (
+                      <a
+                        key={num}
+                        href={`#`}
+                        className="flex items-center justify-between p-4 bg-white border border-gray-200 shadow-sm rounded-xl font-semibold text-gray-700 active:bg-gray-50 active:scale-95 transition-transform"
+                      >
+                        <span>Nhóm Zalo Phương Viên {num}</span>{" "}
+                        <ChevronRight size={20} className="text-gray-400" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </Drawer.Content>
+            </Drawer.Portal>
+          </Drawer.Root>
+          <a
+            href="https://facebook.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center text-center gap-2 border border-gray-100 active:scale-95"
+          >
+            <div className="p-3 bg-blue-50 rounded-full text-blue-600">
+              <Facebook size={26} />
+            </div>
+            <span className="font-bold text-[14px] text-gray-700">
+              Fanpage Làng
+            </span>
+          </a>
         </div>
 
-        {/* Danh bạ chi tiết */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.values(groupedContacts).map((section, idx) => {
-            const isOpen = openSections[section.title];
+        {/* ACCORDION CHÍNH */}
+        <div className="space-y-4 pt-2">
+          <div className="bg-[#E0F2FE] text-[#0369A1] text-center text-[13px] md:text-sm p-4 rounded-xl font-bold uppercase tracking-wide border border-blue-100 shadow-sm">
+            NHÂN DÂN VUI LÒNG BẤM VÀO MỤC THÔNG TIN BÊN DƯỚI ĐỂ XEM CHI TIẾT
+          </div>
+
+          {SECTIONS.map((section) => {
+            const isThonExpanded = expandedThon === section.id;
+            const groupedData = getContactsForSection(section.id);
+            const categories = Object.keys(groupedData);
+            const isDisabled = section.disabled;
 
             return (
               <div
-                key={idx}
-                className="bg-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl overflow-hidden shadow-sm h-fit"
+                key={section.id}
+                className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 ${isDisabled ? "opacity-75 grayscale-[30%]" : ""}`}
               >
-                {/* Header của từng Section */}
                 <button
-                  onClick={() => toggleSection(section.title)}
-                  className="w-full bg-[#F8FAFC] px-5 py-4 border-b border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    if (isDisabled) return;
+                    setExpandedThon(isThonExpanded ? "" : section.id);
+                  }}
+                  className={`w-full p-4 flex items-center justify-between transition-colors ${
+                    isDisabled
+                      ? "bg-gray-50/80 cursor-not-allowed"
+                      : isThonExpanded
+                        ? "bg-blue-600"
+                        : "hover:bg-gray-50"
+                  }`}
                 >
-                  <div className="flex items-center gap-3 text-left">
-                    <div className="p-2 bg-gray-200/70 rounded-lg text-gray-600">
-                      <ShieldAlert size={20} />
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-xl transition-colors ${
+                        isDisabled
+                          ? "bg-gray-200 text-gray-400"
+                          : isThonExpanded
+                            ? "bg-blue-500/50 text-white"
+                            : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      <Building2 size={20} />
                     </div>
-                    <div>
-                      <h3 className="font-extrabold text-gray-800 uppercase text-[13px] md:text-sm">
-                        {section.title}
-                      </h3>
-                      {section.desc && (
-                        <p className="text-[12px] md:text-[13px] text-gray-500 font-medium mt-0.5">
-                          {section.desc}
-                        </p>
+                    <div className="text-left flex flex-col items-start gap-1">
+                      <span
+                        className={`block font-extrabold text-[15px] uppercase tracking-wide ${
+                          isDisabled
+                            ? "text-gray-400"
+                            : isThonExpanded
+                              ? "text-white"
+                              : "text-gray-800"
+                        }`}
+                      >
+                        {section.label}
+                      </span>
+                      {isDisabled ? (
+                        <span className="text-[11px] font-bold bg-gray-200 text-gray-500 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          {section.message || "Đang cập nhật"}
+                        </span>
+                      ) : (
+                        !isThonExpanded &&
+                        categories.length > 0 && (
+                          <span className="text-xs text-gray-500 font-medium">
+                            {categories.length} ban ngành
+                          </span>
+                        )
                       )}
                     </div>
                   </div>
-                  {isOpen ? (
-                    <ChevronUp className="text-gray-400" />
-                  ) : (
-                    <ChevronDown className="text-gray-400" />
+                  {!isDisabled && (
+                    <motion.div
+                      animate={{ rotate: isThonExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown
+                        className={
+                          isThonExpanded ? "text-white" : "text-gray-400"
+                        }
+                      />
+                    </motion.div>
                   )}
                 </button>
 
-                {/* Nội dung danh sách */}
-                {isOpen && (
-                  <div className="p-4 space-y-3">
-                    {section.items.map((contact) => (
-                      <div
-                        key={contact.id}
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-all hover:border-gray-300 ${
-                          contact.displayType === "highlight"
-                            ? "bg-gray-100/80 border-gray-200"
-                            : "bg-white border-transparent border-b-gray-100 last:border-none"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 ${contact.displayType === "highlight" ? "w-14 h-14 md:w-16 md:h-16 text-xl" : "w-12 h-12 text-base"}`}
-                          >
-                            {contact.fullName.charAt(0)}
-                          </div>
-
-                          <div className="flex flex-col">
-                            <h4
-                              className={`font-bold text-gray-900 ${contact.displayType === "highlight" ? "text-base md:text-lg" : "text-[15px] md:text-base"}`}
-                            >
-                              {contact.fullName}
-                            </h4>
-                            <p
-                              className={`${contact.displayType === "highlight" ? "text-blue-700 font-semibold" : "text-gray-600 font-medium"} text-[13px] mt-0.5`}
-                            >
-                              {contact.role}
-                            </p>
-                            {contact.displayType === "highlight" && (
-                              <p className="text-gray-500 text-[13px] flex items-center gap-1.5 mt-1.5 font-medium">
-                                <Phone size={13} className="text-red-500" />{" "}
-                                {contact.phone}
-                              </p>
-                            )}
-                          </div>
+                <AnimatePresence>
+                  {isThonExpanded && !isDisabled && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden bg-[#F8FAFC]"
+                    >
+                      {categories.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 font-medium text-sm">
+                          Đang cập nhật dữ liệu...
                         </div>
+                      ) : (
+                        // SỬA ĐỔI 3: Thêm items-start để Grid không kéo dãn chiều cao các Card khác cùng hàng
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 items-start">
+                          {categories.map((catName) => {
+                            const style =
+                              CATEGORY_STYLES[catName] ||
+                              CATEGORY_STYLES["default"];
+                            const Icon = style.icon;
+                            const catKey = `${section.id}-${catName}`;
 
-                        <a
-                          href={`tel:${contact.phone}`}
-                          className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-full font-bold transition-all shrink-0 active:scale-95 ${
-                            contact.displayType === "highlight"
-                              ? "bg-[#22C55E] text-white hover:bg-green-600 shadow-md min-w-[100px] text-sm"
-                              : "bg-[#DCFCE7] text-[#166534] hover:bg-green-200 text-sm"
-                          }`}
-                        >
-                          <Phone size={15} />
-                          {contact.displayType === "highlight"
-                            ? "Gọi ngay"
-                            : "Gọi"}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                            // Kiểm tra trạng thái mở của Ban Ngành
+                            const isCatExpanded = expandedCategory === catKey;
+
+                            return (
+                              <div
+                                key={catName}
+                                className={`rounded-2xl border transition-all ${style.bg} ${style.border}`}
+                              >
+                                <button
+                                  onClick={() => toggleCategory(catKey)}
+                                  className="w-full p-3.5 flex items-center justify-between"
+                                >
+                                  <div className="flex items-center gap-3 text-left">
+                                    <div
+                                      className={`p-2 rounded-lg ${style.iconBg} ${style.iconColor}`}
+                                    >
+                                      <Icon size={18} />
+                                    </div>
+                                    <div>
+                                      <h3
+                                        className={`font-black text-[13px] uppercase tracking-wide ${style.text}`}
+                                      >
+                                        {catName}
+                                      </h3>
+                                      <p className="text-[12px] text-gray-500 font-medium mt-0.5">
+                                        {groupedData[catName].desc}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* SỬA ĐỔI 4: ChevronRight thay cho ChevronDown, xoay 90 độ khi mở */}
+                                  <motion.div
+                                    animate={{ rotate: isCatExpanded ? 90 : 0 }}
+                                  >
+                                    <ChevronRight
+                                      className={style.iconColor}
+                                      size={20}
+                                    />
+                                  </motion.div>
+                                </button>
+
+                                <AnimatePresence>
+                                  {isCatExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="p-3 pt-0 space-y-3">
+                                        {groupedData[catName].items.map(
+                                          (contact) => (
+                                            <ContactCard
+                                              key={contact.id}
+                                              contact={contact}
+                                            />
+                                          ),
+                                        )}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </div>
       </main>
+
+      {/* FOOTER */}
+      <footer className="bg-[#122A54] text-white pt-10 pb-8 mt-12 border-t-4 border-blue-900">
+        <div className="max-w-4xl mx-auto px-4 md:px-8 space-y-8 text-center md:text-left md:flex md:justify-between md:gap-12 md:space-y-0">
+          <div className="md:flex-1 text-center md:text-left">
+            <h2 className="text-xl font-bold mb-3 text-white">
+              Làng Phương Viên
+            </h2>
+            <p className="text-blue-200 text-[14px] leading-relaxed">
+              Một làng quê giàu truyền thống văn hóa, lịch sử lâu đời thuộc xã
+              Sơn Đồng, thành phố Hà Nội.
+            </p>
+          </div>
+          <div className="md:flex-1">
+            <h3 className="text-lg font-bold mb-4 text-white text-center md:text-left">
+              Khám phá
+            </h3>
+            <div className="flex flex-col gap-3 px-2 md:px-0">
+              <a
+                href="#"
+                className="flex items-center justify-between p-3.5 bg-white/10 hover:bg-white/20 transition-colors rounded-xl border border-white/10 text-white font-semibold text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <MessageCircle size={18} className="text-blue-300" /> Nhóm
+                  Zalo Làng
+                </div>
+                <ExternalLink size={16} className="text-blue-300/70" />
+              </a>
+              <a
+                href="#"
+                className="flex items-center justify-between p-3.5 bg-white/10 hover:bg-white/20 transition-colors rounded-xl border border-white/10 text-white font-semibold text-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <Facebook size={18} className="text-blue-400" /> Fanpage Đoàn
+                  Thanh niên
+                </div>
+                <ExternalLink size={16} className="text-blue-300/70" />
+              </a>
+            </div>
+          </div>
+          <div className="md:flex-1 text-center md:text-left">
+            <h3 className="text-lg font-bold mb-3 text-white">Liên hệ</h3>
+            <p className="text-blue-200 text-[14px] leading-relaxed">
+              Làng Phương Viên, Xã Sơn Đồng
+              <br />
+              Thành phố Hà Nội
+            </p>
+            <div className="mt-3 flex items-center justify-center md:justify-start gap-2 text-[15px] font-medium text-white">
+              <Phone size={16} className="text-red-400" /> Ban tổ chức:
+              0987.654.321
+            </div>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 md:px-8 mt-8 pt-6 border-t border-white/10 text-center space-y-2">
+          <p className="text-blue-300/80 text-[12px]">
+            © 2026 Làng Phương Viên. Bảo lưu mọi quyền.
+          </p>
+          <p className="text-blue-300/80 text-[12px]">
+            Được thực hiện bởi{" "}
+            <span className="font-bold text-white">Chi đoàn Phương Viên 4</span>
+          </p>
+          <p className="text-blue-400/60 text-[11px] mt-2 font-medium">
+            Cổng Danh bạ Điện tử – Phiên bản 1.0
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
