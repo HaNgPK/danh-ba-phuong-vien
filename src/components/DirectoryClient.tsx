@@ -340,7 +340,7 @@ export default function DirectoryClient({
               {village?.fullName || "Danh bạ điện tử"}
             </h2>
             <p className="text-blue-200 text-[14px] leading-relaxed">
-              Hệ thống liên hệ công khai được tách theo từng làng và dùng chung một codebase.
+              Cổng thông tin liên lạc chính thức, giúp kết nối nhanh chóng và hiệu quả giữa cộng đồng cư dân và cán bộ phụ trách.
             </p>
           </div>
 
@@ -379,7 +379,7 @@ export default function DirectoryClient({
           <div className="md:flex-1 text-center md:text-left">
             <h3 className="text-lg font-bold mb-3 text-white">Liên hệ</h3>
             <p className="text-blue-200 text-[14px] leading-relaxed">
-              {village?.address || "Địa chỉ đang cập nhật"}
+              {village?.address || "Chưa có thông tin địa chỉ"}
             </p>
             {village?.emergencyPolicePhone && (
               <div className="mt-3 flex items-center justify-center md:justify-start gap-2 text-[15px] font-medium text-white">
@@ -392,10 +392,10 @@ export default function DirectoryClient({
 
         <div className="max-w-5xl mx-auto px-4 md:px-8 mt-8 pt-6 border-t border-white/10 text-center space-y-2">
           <p className="text-blue-300/80 text-[12px]">
-            2026 {village?.fullName || "Danh bạ điện tử"}.
+            &copy; {new Date().getFullYear()} {village?.fullName || "Danh bạ điện tử"}. Thiết kế để phục vụ cộng đồng.
           </p>
           <p className="text-blue-400/60 text-[11px] mt-2 font-medium">
-            Một hệ thống, nhiều làng, route tách biệt.
+            Thông tin được quản lý và cập nhật thường xuyên bởi ban quản trị.
           </p>
         </div>
       </footer>
