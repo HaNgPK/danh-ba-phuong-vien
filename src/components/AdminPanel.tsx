@@ -23,6 +23,7 @@ import getCroppedImg from "@/src/utils/cropImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "cau-hinh" | "thon-xom" | "danh-ba" | "xem-truoc";
+type InitialTab = Tab | "settings";
 
 interface Village {
   id: string;
@@ -108,13 +109,16 @@ export default function AdminPanel({
   initialContacts,
   initialScopes,
   initialButtons,
+  initialTab,
 }: {
   village?: Village;
   initialContacts: Contact[];
   initialScopes?: Scope[];
   initialButtons?: any[];
+  initialTab?: InitialTab;
 }) {
   const router = useRouter();
+  const defaultTab: Tab = initialTab === "settings" ? "cau-hinh" : initialTab ?? "danh-ba";
 
   // Default scope nếu chưa có thôn nào
   const defaultScopeList: Scope[] =
@@ -122,7 +126,7 @@ export default function AdminPanel({
       ? initialScopes
       : [{ code: "chung", name: "Toàn làng / Chung", message: "", disabled: false, order: 0 }];
 
-  const [tab, setTab] = useState<Tab>("danh-ba");
+  const [tab, setTab] = useState<Tab>(defaultTab);
   const [saving, setSaving] = useState<string>("");
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [scopes, setScopes] = useState<Scope[]>(defaultScopeList);
