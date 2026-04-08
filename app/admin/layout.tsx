@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-
+import LogoutButton from '@/src/components/LogoutButton';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -13,9 +13,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/new" className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">
             + Làng mới
           </Link>
-          <Link href="/" className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
+          <Link href="/" className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition">
             Trang chủ
           </Link>
+          <LogoutButton />
         </div>
       </nav>
       <main className="flex-1">{children}</main>

@@ -7,9 +7,14 @@ export async function getVillageBySlug(slug: string) {
     return null;
   }
 
-  return villageModel.findUnique({
-    where: { slug },
-  });
+  try {
+    return await villageModel.findUnique({
+      where: { slug },
+    });
+  } catch (error) {
+    console.error('Database connection failed for getVillageBySlug:', error);
+    return null; // Graceful degradation for unavailable DB
+  }
 }
 
 export async function getAllVillages() {
@@ -19,7 +24,12 @@ export async function getAllVillages() {
     return [];
   }
 
-  return villageModel.findMany({
-    orderBy: { name: 'asc' },
-  });
+  try {
+    return await villageModel.findMany({
+      orderBy: { name: 'asc' },
+    });
+  } catch (error) {
+    console.error('Database connection failed for getAllVillages:', error);
+    return []; // Graceful degradation for unavailable DB
+  }
 }
