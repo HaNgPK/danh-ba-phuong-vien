@@ -19,35 +19,35 @@ export default async function AdminIndexPage() {
           Admin hub
         </p>
         <h2 className="mt-2 text-2xl md:text-3xl font-black text-slate-900">
-          Quan ly router va lang
+          Quản lý router và làng
         </h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-500">
-          /admin la trang quan ly cac router cua tung lang. Tu day ban chon
-          vao settings de sua cau hinh route, scope, thong tin lang, hoac vao
-          workspace de sua danh ba va xem preview.
+          /admin là trang quản lý các router của từng làng. Từ đây bạn chọn
+          vào settings để sửa cấu hình route, scope, thông tin làng, hoặc vào
+          workspace để sửa danh bạ và xem preview.
         </p>
         <div className="mt-5">
           <Link
             href="/admin/new"
             className="inline-flex rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
           >
-            Tao lang moi
+            Tạo làng mới
           </Link>
         </div>
       </section>
 
       {villages.length === 0 ? (
         <section className="rounded-[24px] md:rounded-[28px] border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm">
-          <h3 className="text-xl font-black text-slate-900">Chua co lang nao</h3>
+          <h3 className="text-xl font-black text-slate-900">Chưa có làng nào</h3>
           <p className="mt-2 text-sm text-slate-500">
-            Ban chua tao router/lang nao trong he thong. Bam nut ben duoi de khoi tao lang dau tien.
+            Bạn chưa tạo router/làng nào trong hệ thống. Bấm nút bên dưới để khởi tạo làng đầu tiên.
           </p>
           <div className="mt-6">
             <Link
               href="/admin/new"
               className="inline-flex rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
             >
-              Tao lang dau tien
+              Tạo làng đầu tiên
             </Link>
           </div>
         </section>

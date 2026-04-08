@@ -25,11 +25,11 @@ import {
 import { ContactCard } from "@/src/components/ContactCard";
 
 const FALLBACK_SECTIONS = [
-  { id: "lang", label: "Cap toan lang", disabled: true, message: "Dang cap nhat" },
-  { id: "thon1", label: "Thon 1" },
-  { id: "thon2", label: "Thon 2" },
-  { id: "thon3", label: "Thon 3" },
-  { id: "thon4", label: "Thon 4" },
+  { id: "lang", label: "Cấp toàn làng", disabled: true, message: "Đang cập nhật" },
+  { id: "thon1", label: "Thôn 1" },
+  { id: "thon2", label: "Thôn 2" },
+  { id: "thon3", label: "Thôn 3" },
+  { id: "thon4", label: "Thôn 4" },
 ];
 
 const CATEGORY_STYLES: Record<string, any> = {
@@ -138,10 +138,10 @@ export default function DirectoryClient({
         </div>
         <div className="flex flex-col">
           <h1 className="font-extrabold text-[15px] leading-tight uppercase tracking-wide">
-            {village?.name || "Danh ba dien tu"}
+            {village?.name || "Danh bạ điện tử"}
           </h1>
           <span className="text-[12px] text-blue-200 font-medium">
-            Cong thong tin lien he
+            Cổng thông tin liên hệ
           </span>
         </div>
       </header>
@@ -168,13 +168,13 @@ export default function DirectoryClient({
           </div>
 
           <h2 className="text-white text-3xl md:text-4xl font-extrabold tracking-wide uppercase shadow-sm">
-            {village?.fullName || "Danh ba dien tu"}
+            {village?.fullName || "Danh bạ điện tử"}
           </h2>
           <p className="text-blue-100 mt-2 font-medium text-base md:text-lg">
-            {village?.address || "Dia chi dang cap nhat"}
+            {village?.address || "Địa chỉ đang cập nhật"}
           </p>
           <div className="mt-4 px-6 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white font-semibold text-sm shadow-sm">
-            He thong theo tung lang
+            Danh Bạ Điện Tử Địa Phương
           </div>
         </div>
       </section>
@@ -182,7 +182,7 @@ export default function DirectoryClient({
       <main className="max-w-5xl mx-auto px-4 -mt-10 relative z-20 space-y-6">
         <section className="bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-md space-y-4">
           <h2 className="text-red-600 font-bold text-sm flex items-center justify-center gap-2 uppercase tracking-wide">
-            <ShieldAlert size={20} /> So dien thoai khan cap
+            <ShieldAlert size={20} /> Số điện thoại khẩn cấp
           </h2>
 
           <div className="flex flex-col gap-3">
@@ -191,7 +191,7 @@ export default function DirectoryClient({
               className="flex items-center justify-between p-4 rounded-xl text-white shadow-sm active:scale-95 transition-transform bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700"
             >
               <div className="flex items-center gap-3 font-semibold text-[15px]">
-                <ShieldAlert size={22} /> Goi cong an
+                <ShieldAlert size={22} /> Gọi Công An Khu Vực
               </div>
               <PhoneCall size={20} className="opacity-90" />
             </a>
@@ -205,7 +205,7 @@ export default function DirectoryClient({
               >
                 <MessageCircle size={22} className="mb-1 opacity-90" />
                 <span className="font-semibold text-[13px] md:text-sm text-center">
-                  {primarySocialButton?.label || "Nhom Zalo"}
+                  {primarySocialButton?.label || "Nhóm Zalo"}
                 </span>
               </a>
               <a
@@ -214,7 +214,7 @@ export default function DirectoryClient({
               >
                 <Activity size={22} className="mb-1 opacity-90" />
                 <span className="font-semibold text-[13px] md:text-sm text-center">
-                  Tram y te
+                  Trạm y tế
                 </span>
               </a>
             </div>
@@ -229,7 +229,7 @@ export default function DirectoryClient({
                   <MessageCircle size={26} />
                 </div>
                 <span className="font-bold text-[14px] text-gray-700">
-                  {primarySocialButton?.label || "Lien ket cong dong"}
+                  {primarySocialButton?.label || "Liên kết cộng đồng"}
                 </span>
               </button>
             </Drawer.Trigger>
@@ -240,16 +240,16 @@ export default function DirectoryClient({
                 <div className="p-4 bg-white rounded-t-[24px] flex-1 overflow-y-auto">
                   <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-6" />
                   <Drawer.Title className="font-black text-xl mb-1 text-center text-gray-800">
-                    Lien ket nhanh
+                    Liên kết nhanh
                   </Drawer.Title>
                   <Drawer.Description className="text-center text-gray-500 text-sm mb-6">
-                    Cac nhom va kenh thong tin cua lang hien tai
+                    Các nhóm và kênh thông tin của làng hiện tại
                   </Drawer.Description>
                   <div className="space-y-3">
                     {socialButtons.length === 0 && (
                       <div className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl font-bold text-gray-400 border border-gray-100 cursor-not-allowed select-none">
                         <div className="flex flex-col items-start gap-1 md:flex-row md:items-center md:gap-3">
-                          <span>Dang cap nhat lien ket</span>
+                          <span>Đang cập nhật liên kết</span>
                         </div>
                         <LockIcon size={18} className="text-gray-300" />
                       </div>
@@ -314,21 +314,21 @@ export default function DirectoryClient({
           </div>
 
           <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 shadow-sm min-h-[300px]">
-             {filteredContacts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
-                    <Users size={28} className="text-slate-300" />
-                  </div>
-                  <p className="font-bold text-slate-600 text-lg">Không tìm thấy liên hệ</p>
-                  <p className="text-sm mt-1 text-slate-400">Hãy thử nhập từ khóa khác</p>
+            {filteredContacts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                  <Users size={28} className="text-slate-300" />
                 </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {filteredContacts.map((contact) => (
-                    <ContactCard key={contact.id} contact={contact} />
-                  ))}
-                </div>
-              )}
+                <p className="font-bold text-slate-600 text-lg">Không tìm thấy liên hệ</p>
+                <p className="text-sm mt-1 text-slate-400">Hãy thử nhập từ khóa khác</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {filteredContacts.map((contact) => (
+                  <ContactCard key={contact.id} contact={contact} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -337,16 +337,16 @@ export default function DirectoryClient({
         <div className="max-w-5xl mx-auto px-4 md:px-8 space-y-8 text-center md:text-left md:flex md:justify-between md:gap-12 md:space-y-0">
           <div className="md:flex-1 text-center md:text-left">
             <h2 className="text-xl font-bold mb-3 text-white">
-              {village?.fullName || "Danh ba dien tu"}
+              {village?.fullName || "Danh bạ điện tử"}
             </h2>
             <p className="text-blue-200 text-[14px] leading-relaxed">
-              He thong lien he cong khai duoc tach theo tung lang va dung chung mot codebase.
+              Hệ thống liên hệ công khai được tách theo từng làng và dùng chung một codebase.
             </p>
           </div>
 
           <div className="md:flex-1">
             <h3 className="text-lg font-bold mb-4 text-white text-center md:text-left">
-              Kham pha
+              Khám phá
             </h3>
             <div className="flex flex-col gap-3 px-2 md:px-0">
               <a
@@ -357,7 +357,7 @@ export default function DirectoryClient({
               >
                 <div className="flex items-center gap-3">
                   <MessageCircle size={18} className="text-blue-300" />
-                  {primarySocialButton?.label || "Nhom cong dong"}
+                  {primarySocialButton?.label || "Nhóm cộng đồng"}
                 </div>
                 <ExternalLink size={16} className="text-blue-300/70" />
               </a>
@@ -377,14 +377,14 @@ export default function DirectoryClient({
           </div>
 
           <div className="md:flex-1 text-center md:text-left">
-            <h3 className="text-lg font-bold mb-3 text-white">Lien he</h3>
+            <h3 className="text-lg font-bold mb-3 text-white">Liên hệ</h3>
             <p className="text-blue-200 text-[14px] leading-relaxed">
-              {village?.address || "Dia chi dang cap nhat"}
+              {village?.address || "Địa chỉ đang cập nhật"}
             </p>
             {village?.emergencyPolicePhone && (
               <div className="mt-3 flex items-center justify-center md:justify-start gap-2 text-[15px] font-medium text-white">
                 <Phone size={16} className="text-red-400" />
-                Lien he nhanh: {village.emergencyPolicePhone}
+                Liên hệ nhanh: {village.emergencyPolicePhone}
               </div>
             )}
           </div>
@@ -392,10 +392,10 @@ export default function DirectoryClient({
 
         <div className="max-w-5xl mx-auto px-4 md:px-8 mt-8 pt-6 border-t border-white/10 text-center space-y-2">
           <p className="text-blue-300/80 text-[12px]">
-            2026 {village?.fullName || "Danh ba dien tu"}.
+            2026 {village?.fullName || "Danh bạ điện tử"}.
           </p>
           <p className="text-blue-400/60 text-[11px] mt-2 font-medium">
-            Mot he thong, nhieu lang, route tach biet.
+            Một hệ thống, nhiều làng, route tách biệt.
           </p>
         </div>
       </footer>
