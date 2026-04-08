@@ -36,25 +36,29 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
       }`}
     >
       {/* Phần Thông tin chung */}
-      <div className="flex items-center gap-4 mb-3">
+      <div className="flex items-start gap-3 md:gap-4 mb-3">
         <div
-          className={`rounded-full flex items-center justify-center shrink-0 font-bold shadow-inner ${
+          className={`rounded-full overflow-hidden flex items-center justify-center shrink-0 font-bold shadow-inner ${
             isHighlight
               ? "bg-blue-600 text-white w-14 h-14 text-xl"
               : "bg-blue-100 text-blue-700 w-12 h-12 text-base"
           }`}
         >
-          {contact.fullName.charAt(0)}
+          {contact.avatarUrl ? (
+            <img src={contact.avatarUrl} alt={contact.fullName} className="w-full h-full object-cover" />
+          ) : (
+            contact.fullName.charAt(0)
+          )}
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <h3
-            className={`font-bold text-gray-900 ${isHighlight ? "text-lg" : "text-base"}`}
+            className={`font-bold text-gray-900 break-words ${isHighlight ? "text-lg" : "text-base"}`}
           >
             {contact.fullName}
           </h3>
           <p
-            className={`${isHighlight ? "text-blue-600" : "text-gray-500"} font-medium text-[13px] mt-0.5`}
+            className={`${isHighlight ? "text-blue-600" : "text-gray-500"} font-medium text-[13px] mt-0.5 break-words`}
           >
             {contact.role}
           </p>
@@ -65,11 +69,11 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
       <div className="h-px w-full bg-gray-100 mb-3"></div>
 
       {/* Nhóm Nút Hành Động (Action Buttons) */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Nút Gọi (Primary) */}
         <a
           href={`tel:${contact.phone}`}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold transition-all active:scale-95 ${
+          className={`min-w-[160px] flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold transition-all active:scale-95 ${
             isHighlight
               ? "bg-[#22C55E] text-white hover:bg-green-600 shadow-sm"
               : "bg-[#DCFCE7] text-[#166534] hover:bg-green-200"

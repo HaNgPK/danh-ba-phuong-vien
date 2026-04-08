@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Contact {
+  id           String   @id @default(cuid())
+  scope        String
+  category     String
+  categoryDesc String?
+  fullName     String
+  avatarUrl    String?
+  role         String
+  phone        String
+  displayType  String   @default("normal")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  villageId    String
+  village      Village  @relation(fields: [villageId], references: [id])
+
+  @@index([villageId])
+}
+
+model GroupScope {
+  id        String   @id @default(cuid())
+  code      String
+  name      String
+  message   String?
+  disabled  Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  villageId String
+  village   Village  @relation(fields: [villageId], references: [id])
+
+  @@unique([villageId, code])
+  @@index([villageId])
+}
+
+model ActionButton {
+  id        String   @id @default(cuid())
+  type      String   // "emergency", "social", "zalo"
+  label     String
+  subLabel  String?
+  url       String
+  icon      String
+  color     String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  villageId String
+  village   Village  @relation(fields: [villageId], references: [id])
+}
+
+model Village {
+  id                    String    @id @default(cuid())
+  slug                  String    @unique
+  name                  String
+  fullName              String
+  address               String
+  logoUrl               String?
+  primaryColor          String?
+  facebookUrl           String?
+  zaloUrl               String?
+  emergencyPolicePhone  String?
+  emergencyHealthPhone  String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  contacts              Contact[]
+  groupScopes           GroupScope[]
+  actionButtons         ActionButton[]
+}
+
+
