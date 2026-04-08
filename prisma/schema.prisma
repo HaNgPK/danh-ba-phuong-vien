@@ -15,6 +15,7 @@ model Contact {
   avatarUrl    String?
   role         String
   phone        String
+  address      String?
   displayType  String   @default("normal")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

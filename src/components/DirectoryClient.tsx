@@ -113,107 +113,18 @@ export default function DirectoryClient({
   scopes?: any[];
   buttons?: any[];
 }) {
-  const sectionList = normalizeSections(scopes);
-  const activeSections = sectionList.filter((section) => !section.disabled);
-  const singleSection = activeSections.length === 1 ? activeSections[0] : null;
-  const defaultSection =
-    sectionList.find((section) => !section.disabled)?.id ?? sectionList[0]?.id ?? "";
-
-  const [expandedScope, setExpandedScope] = useState<string>(defaultSection);
-  const [expandedCategory, setExpandedCategory] = useState<string>("");
+  const [searchKeyword, setSearchKeyword] = useState<string>("");
 
   const socialButtons = (buttons ?? []).filter((button: any) => button.type !== "emergency");
   const primarySocialButton = socialButtons[0];
   const secondarySocialButton = socialButtons[1];
 
-  const getContactsForSection = (sectionId: string) => {
-    const filtered = contacts.filter((contact) => contact.scope === sectionId);
-    return filtered.reduce(
-      (acc, contact) => {
-        if (!acc[contact.category]) {
-          acc[contact.category] = { desc: contact.categoryDesc, items: [] };
-        }
-        acc[contact.category].items.push(contact);
-        return acc;
-      },
-      {} as Record<string, { desc: string; items: any[] }>,
-    );
-  };
-
-  const toggleCategory = (categoryKey: string) => {
-    setExpandedCategory((prev) => (prev === categoryKey ? "" : categoryKey));
-  };
-
-  const renderCategories = (sectionId: string) => {
-    const groupedData = getContactsForSection(sectionId);
-    const categories = Object.keys(groupedData);
-
-    if (categories.length === 0) {
-      return (
-        <div className="text-center py-8 text-gray-400 font-medium text-sm">
-          Chưa có dữ liệu trong mục này.
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-        {categories.map((categoryName) => {
-          const style = CATEGORY_STYLES[categoryName] || CATEGORY_STYLES.default;
-          const Icon = style.icon;
-          const categoryKey = `${sectionId}-${categoryName}`;
-          const isCategoryExpanded = expandedCategory === categoryKey;
-
-          return (
-            <div
-              key={categoryName}
-              className={`rounded-2xl border transition-all ${style.bg} ${style.border}`}
-            >
-              <button
-                onClick={() => toggleCategory(categoryKey)}
-                className="w-full p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3 text-left">
-                  <div className={`p-3 rounded-xl ${style.iconBg} ${style.iconColor}`}>
-                    <Icon size={20} />
-                  </div>
-                  <div>
-                    <h3 className={`font-black text-[13px] uppercase tracking-wide ${style.text}`}>
-                      {categoryName}
-                    </h3>
-                    <p className="text-[12px] text-gray-500 font-medium mt-0.5">
-                      {groupedData[categoryName].desc}
-                    </p>
-                  </div>
-                </div>
-
-                <motion.div animate={{ rotate: isCategoryExpanded ? 90 : 0 }}>
-                  <ChevronRight className={style.iconColor} size={20} />
-                </motion.div>
-              </button>
-
-              <AnimatePresence>
-                {isCategoryExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-4 pt-0 space-y-3">
-                      {groupedData[categoryName].items.map((contact: any) => (
-                        <ContactCard key={contact.id} contact={contact} />
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  const filteredContacts = contacts.filter(
+    (c) =>
+      c.fullName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      c.role.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      c.phone.includes(searchKeyword)
+  );
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans text-gray-800">
@@ -377,108 +288,48 @@ export default function DirectoryClient({
           </a>
         </div>
 
-        <div className="space-y-4 pt-2">
-          <div className="bg-[#E0F2FE] text-[#0369A1] text-center text-[13px] md:text-sm p-4 rounded-xl font-bold uppercase tracking-wide border border-blue-100 shadow-sm">
-            {singleSection ? "Nhấn vào từng mục thông tin để xem chi tiết danh bạ liên hệ" : "Chọn scope để xem danh bạ của từng làng"}
+        <div className="pt-6 space-y-4">
+          <div className="px-2 mb-2">
+            <h2 className="text-xl md:text-2xl font-black text-[#122A54] uppercase tracking-wide">
+              Danh bạ liên hệ
+            </h2>
+            <p className="text-[13px] md:text-sm text-gray-500 font-medium mt-1 leading-relaxed">
+              Thông tin liên lạc của các cấp ủy, ban lãnh đạo, cán bộ và người phụ trách trong làng.
+            </p>
           </div>
 
-          {singleSection ? (
-            <div className="rounded-[20px] md:rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
-              {renderCategories(singleSection.id)}
-            </div>
-          ) : (
-            sectionList.map((section) => {
-            const isScopeExpanded = expandedScope === section.id;
-            const groupedData = getContactsForSection(section.id);
-            const categories = Object.keys(groupedData);
-            const isDisabled = section.disabled;
-
-            return (
-              <div
-                key={section.id}
-                className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 ${isDisabled ? "opacity-75 grayscale-[30%]" : ""}`}
-              >
-                <button
-                  onClick={() => {
-                    if (isDisabled) return;
-                    setExpandedScope(isScopeExpanded ? "" : section.id);
-                  }}
-                  className={`w-full p-4 flex items-center justify-between transition-colors ${
-                    isDisabled
-                      ? "bg-gray-50/80 cursor-not-allowed"
-                      : isScopeExpanded
-                        ? "bg-blue-600"
-                        : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2 rounded-xl transition-colors ${
-                        isDisabled
-                          ? "bg-gray-200 text-gray-400"
-                          : isScopeExpanded
-                            ? "bg-blue-500/50 text-white"
-                            : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      <Building2 size={20} />
-                    </div>
-
-                    <div className="text-left flex flex-col items-start gap-1">
-                      <span
-                        className={`block font-extrabold text-[15px] uppercase tracking-wide ${
-                          isDisabled
-                            ? "text-gray-400"
-                            : isScopeExpanded
-                              ? "text-white"
-                              : "text-gray-800"
-                        }`}
-                      >
-                        {section.label}
-                      </span>
-
-                      {isDisabled ? (
-                        <span className="text-[11px] font-bold bg-gray-200 text-gray-500 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                          {section.message || "Dang cap nhat"}
-                        </span>
-                      ) : (
-                        !isScopeExpanded &&
-                        categories.length > 0 && (
-                          <span className="text-xs text-gray-500 font-medium">
-                            {categories.length} nhom
-                          </span>
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  {!isDisabled && (
-                    <motion.div
-                      animate={{ rotate: isScopeExpanded ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown className={isScopeExpanded ? "text-white" : "text-gray-400"} />
-                    </motion.div>
-                  )}
-                </button>
-
-                <AnimatePresence>
-                  {isScopeExpanded && !isDisabled && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="overflow-hidden bg-[#F8FAFC]"
-                    >
-                      <div className="p-4">{renderCategories(section.id)}</div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+          <div className="sticky top-[80px] z-40 relative">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="Tìm kiếm tên, chức vụ..."
+                className="w-full bg-white rounded-[20px] md:rounded-[24px] border border-gray-200 px-5 py-4 pl-12 text-[15px] font-semibold text-slate-800 placeholder:text-gray-400 placeholder:font-medium shadow-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+              />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Users size={20} />
               </div>
-            );
-          })
-          )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[20px] md:rounded-[28px] border border-slate-200 p-4 shadow-sm min-h-[300px]">
+             {filteredContacts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                  <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
+                    <Users size={28} className="text-slate-300" />
+                  </div>
+                  <p className="font-bold text-slate-600 text-lg">Không tìm thấy liên hệ</p>
+                  <p className="text-sm mt-1 text-slate-400">Hãy thử nhập từ khóa khác</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {filteredContacts.map((contact) => (
+                    <ContactCard key={contact.id} contact={contact} />
+                  ))}
+                </div>
+              )}
+          </div>
         </div>
       </main>
 

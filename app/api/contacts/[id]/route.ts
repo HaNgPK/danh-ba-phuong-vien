@@ -29,6 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         avatarUrl: body.avatarUrl,
         role: body.role,
         phone: body.phone,
+        address: body.address,
         displayType: body.displayType,
       },
     });

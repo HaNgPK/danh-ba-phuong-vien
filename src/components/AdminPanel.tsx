@@ -13,8 +13,13 @@ import {
   Trash2,
   Users,
   X,
+  Link as LinkIcon,
+  Camera,
+  Upload,
 } from "lucide-react";
 import DirectoryClient from "@/src/components/DirectoryClient";
+import Cropper from "react-easy-crop";
+import getCroppedImg from "@/src/utils/cropImage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "cau-hinh" | "thon-xom" | "danh-ba" | "xem-truoc";
@@ -50,6 +55,7 @@ interface Contact {
   fullName: string;
   role: string;
   phone: string;
+  address?: string;
   avatarUrl?: string;
   displayType: string;
 }
@@ -57,7 +63,6 @@ interface Contact {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: "cau-hinh", label: "Cấu hình làng", icon: <Building2 size={15} /> },
-  { key: "thon-xom", label: "Thôn / Xóm", icon: <Users size={15} /> },
   { key: "danh-ba", label: "Danh bạ", icon: <Phone size={15} /> },
   { key: "xem-truoc", label: "Xem trước", icon: <Eye size={15} /> },
 ];
@@ -122,8 +127,11 @@ export default function AdminPanel({
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [scopes, setScopes] = useState<Scope[]>(defaultScopeList);
   const [editingContactId, setEditingContactId] = useState<string>("");
-  const [filterScope, setFilterScope] = useState<string>("");
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [avatarMethod, setAvatarMethod] = useState<"url" | "upload" | "camera">("url");
+  const [cropState, setCropState] = useState<{ imageSrc: string | null; pixelCrop: any; targetField: "logo" | "avatar" | null }>({ imageSrc: null, pixelCrop: null, targetField: null });
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
 
   const [villageForm, setVillageForm] = useState<Village>({
     id: village?.id ?? "",
@@ -141,11 +149,12 @@ export default function AdminPanel({
   const blankContact = {
     id: "",
     scope: scopes[0]?.code ?? "chung",
-    category: "Ban lãnh đạo thôn",
-    categoryDesc: "Cơ quan quản lý hành chính nhà nước tại cơ sở",
+    category: "Chung",
+    categoryDesc: "",
     fullName: "",
     role: "",
     phone: "",
+    address: "",
     avatarUrl: "",
     displayType: "normal",
   };
@@ -157,19 +166,49 @@ export default function AdminPanel({
   );
 
   // ── Helpers ──────────────────────────────────────────────────────────────
+  const handleFileSelectForCrop = (e: React.ChangeEvent<HTMLInputElement>, targetField: "logo" | "avatar") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setCropState({ imageSrc: url, pixelCrop: null, targetField });
+    e.target.value = "";
+  };
+
+  const handleApproveCrop = async () => {
+    if (!cropState.imageSrc || !cropState.pixelCrop) return;
+    try {
+      const croppedBlob = await getCroppedImg(cropState.imageSrc, cropState.pixelCrop);
+      if (!croppedBlob) throw new Error("Cắt ảnh thất bại.");
+      const formData = new FormData();
+      formData.append("file", croppedBlob, "cropped.jpg");
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data.success) {
+        if (cropState.targetField === "avatar") {
+          setContactForm({ ...contactForm, avatarUrl: data.url });
+        } else if (cropState.targetField === "logo") {
+          setVillageForm({ ...villageForm, logoUrl: data.url });
+        }
+        setCropState({ imageSrc: null, pixelCrop: null, targetField: null });
+      }
+    } catch {
+      alert("Lỗi tải lên ảnh sau khi cắt.");
+    }
+  };
+
   const resetContactForm = () => {
     setEditingContactId("");
     setContactForm({ ...blankContact, scope: scopes[0]?.code ?? "chung" });
   };
 
   const filteredContacts = contacts.filter((c) => {
-    const matchScope = filterScope ? c.scope === filterScope : true;
     const matchSearch = searchKeyword
       ? c.fullName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
         c.role.toLowerCase().includes(searchKeyword.toLowerCase()) ||
         c.phone.includes(searchKeyword)
       : true;
-    return matchScope && matchSearch;
+    return matchSearch;
   });
 
   // ── API Calls ─────────────────────────────────────────────────────────────
@@ -272,6 +311,7 @@ export default function AdminPanel({
       fullName: c.fullName,
       role: c.role,
       phone: c.phone,
+      address: c.address ?? "",
       avatarUrl: c.avatarUrl ?? "",
       displayType: c.displayType,
     });
@@ -355,13 +395,37 @@ export default function AdminPanel({
                     className={inputCls}
                   />
                 </Field>
-                <Field label="URL Logo (ảnh PNG/JPG/WebP)" className="sm:col-span-2">
-                  <input
-                    value={villageForm.logoUrl}
-                    onChange={(e) => setVillageForm({ ...villageForm, logoUrl: e.target.value })}
-                    placeholder="https://..."
-                    className={inputCls}
-                  />
+                <Field label="Logo làng (URL hoặc Tải lên cắt vuông)" className="sm:col-span-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-2">
+                      <input
+                        value={villageForm.logoUrl || ""}
+                        onChange={(e) => setVillageForm({ ...villageForm, logoUrl: e.target.value })}
+                        placeholder="https://..."
+                        className={`flex-1 ${inputCls}`}
+                      />
+                      <label className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl cursor-pointer hover:bg-slate-200 flex items-center justify-center gap-2 border-2 border-slate-200 transition shrink-0">
+                        <Upload size={18} />
+                        <span className="hidden sm:inline">Tải lên & Cắt</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelectForCrop(e, "logo")} />
+                      </label>
+                    </div>
+                    {villageForm.logoUrl && (
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-4">
+                        <img 
+                          src={villageForm.logoUrl} 
+                          alt="Logo Preview" 
+                          className="w-16 h-16 rounded-xl object-cover border-2 border-slate-100 shadow-sm shrink-0 bg-slate-50" 
+                        />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Logo đang dùng</span>
+                          <span className="text-sm font-semibold text-green-700 truncate mt-0.5">
+                            {villageForm.logoUrl}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </Field>
               </div>
             </Card>
@@ -624,29 +688,74 @@ export default function AdminPanel({
                   />
                 </Field>
 
-                {/* Avatar */}
-                <Field label="URL ảnh đại diện (tùy chọn)">
+                {/* Địa chỉ nhà */}
+                <Field label="Địa chỉ nhà (tùy chọn)" className="sm:col-span-2">
                   <input
-                    value={contactForm.avatarUrl}
-                    onChange={(e) => setContactForm({ ...contactForm, avatarUrl: e.target.value })}
-                    placeholder="https://..."
+                    value={contactForm.address || ""}
+                    onChange={(e) => setContactForm({ ...contactForm, address: e.target.value })}
+                    placeholder="Số nhà, đường, phân khu..."
                     className={inputCls}
                   />
                 </Field>
 
-                {/* Thuộc thôn */}
-                <Field label="Thuộc thôn / đơn vị" required>
-                  <select
-                    value={contactForm.scope}
-                    onChange={(e) => setContactForm({ ...contactForm, scope: e.target.value })}
-                    className={selectCls}
-                  >
-                    {scopes.map((s) => (
-                      <option key={s.code} value={s.code}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                {/* Avatar (enhanced) */}
+                <Field label="Ảnh đại diện (tùy chọn)" className="sm:col-span-2">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+                      {["url", "upload", "camera"].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setAvatarMethod(m as "url"|"upload"|"camera")}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-1.5 transition ${avatarMethod === m ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                        >
+                          {m === "url" && <><LinkIcon size={14}/> URL</>}
+                          {m === "upload" && <><Upload size={14}/> Tải lên</>}
+                          {m === "camera" && <><Camera size={14}/> Chụp ảnh</>}
+                        </button>
+                      ))}
+                    </div>
+                    {avatarMethod === "url" && (
+                      <input
+                        value={contactForm.avatarUrl}
+                        onChange={(e) => setContactForm({ ...contactForm, avatarUrl: e.target.value })}
+                        placeholder="https://..."
+                        className={inputCls}
+                      />
+                    )}
+                    {avatarMethod === "upload" && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileSelectForCrop(e, "avatar")}
+                        className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-3.5 py-6 text-sm font-medium text-slate-600 transition hover:border-blue-500"
+                      />
+                    )}
+                    {avatarMethod === "camera" && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => handleFileSelectForCrop(e, "avatar")}
+                        className="w-full rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-3.5 py-6 text-sm font-medium text-slate-600 transition hover:border-blue-500"
+                      />
+                    )}
+                    {contactForm.avatarUrl && (
+                      <div className="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-4 mt-2">
+                        <img 
+                          src={contactForm.avatarUrl} 
+                          alt="Avatar Preview" 
+                          className="w-14 h-14 rounded-full object-cover border-2 border-slate-100 shadow-sm shrink-0 bg-slate-50" 
+                        />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Ảnh đang dùng</span>
+                          <span className="text-sm font-semibold text-green-700 truncate mt-0.5">
+                            {contactForm.avatarUrl}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </Field>
 
                 {/* Kiểu hiển thị */}
@@ -661,38 +770,7 @@ export default function AdminPanel({
                   </select>
                 </Field>
 
-                {/* Ban / nhóm */}
-                <Field label="Ban / Nhóm chức năng" required>
-                  <input
-                    list="category-presets"
-                    value={contactForm.category}
-                    onChange={(e) => {
-                      const preset = CATEGORY_PRESETS.find((p) => p.value === e.target.value);
-                      setContactForm({
-                        ...contactForm,
-                        category: e.target.value,
-                        categoryDesc: preset?.desc ?? contactForm.categoryDesc,
-                      });
-                    }}
-                    placeholder="vd: Cấp ủy chi bộ"
-                    className={inputCls}
-                  />
-                  <datalist id="category-presets">
-                    {CATEGORY_PRESETS.map((p) => (
-                      <option key={p.value} value={p.value} />
-                    ))}
-                  </datalist>
-                </Field>
-
-                {/* Mô tả ban */}
-                <Field label="Mô tả ban / nhóm">
-                  <input
-                    value={contactForm.categoryDesc}
-                    onChange={(e) => setContactForm({ ...contactForm, categoryDesc: e.target.value })}
-                    placeholder="vd: Cơ quan lãnh đạo toàn diện"
-                    className={inputCls}
-                  />
-                </Field>
+                {/* Loại bỏ nhóm chức năng theo yêu cầu */}
 
                 {/* Buttons */}
                 <div className="sm:col-span-2 flex flex-wrap items-center gap-3 pt-2">
@@ -727,26 +805,13 @@ export default function AdminPanel({
               title={`Danh sách liên hệ (${contacts.length})`}
               desc="Tìm kiếm, lọc theo thôn và chỉnh sửa từng liên hệ."
             >
-              {/* Bộ lọc */}
-              <div className="flex flex-wrap gap-3 mb-4">
+              <div className="flex mb-4">
                 <input
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   placeholder="Tìm theo tên, chức vụ, SĐT..."
-                  className="flex-1 min-w-[180px] rounded-xl border-2 border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500"
+                  className="flex-1 min-w-[180px] rounded-xl border-2 border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                 />
-                <select
-                  value={filterScope}
-                  onChange={(e) => setFilterScope(e.target.value)}
-                  className="rounded-xl border-2 border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"
-                >
-                  <option value="">Tất cả thôn</option>
-                  {scopes.map((s) => (
-                    <option key={s.code} value={s.code}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {filteredContacts.length === 0 ? (
@@ -779,8 +844,11 @@ export default function AdminPanel({
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-slate-900 text-sm truncate">{c.fullName}</p>
                           <p className="text-xs text-slate-500 truncate">
-                            {c.role} · <span className="text-blue-600 font-semibold">{scopeLabel}</span> · {c.category}
+                            {c.role} {scopeLabel !== "Toàn làng / Chung" && `· ${scopeLabel}`}
                           </p>
+                          {c.address && (
+                            <p className="text-xs text-slate-400 mt-0.5 truncate">{c.address}</p>
+                          )}
                           <p className="text-xs text-slate-400 font-mono">{c.phone}</p>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
@@ -839,6 +907,36 @@ export default function AdminPanel({
           </div>
         )}
       </div>
+
+      {/* Cropper Modal */}
+      {cropState.imageSrc && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="font-bold text-gray-800">Cắt ảnh chuẩn vuông</h3>
+              <button type="button" onClick={() => setCropState({ imageSrc: null, pixelCrop: null, targetField: null })} className="p-2 rounded-xl bg-gray-100 text-gray-500 hover:bg-gray-200 transition">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="relative w-full h-[400px] bg-slate-900">
+              <Cropper
+                image={cropState.imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(croppedArea, croppedAreaPixels) => setCropState(prev => ({ ...prev, pixelCrop: croppedAreaPixels }))}
+              />
+            </div>
+            <div className="p-4">
+              <button type="button" onClick={handleApproveCrop} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl active:scale-95 transition hover:bg-blue-700">
+                Xác nhận & Tải lên
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

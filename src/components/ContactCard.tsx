@@ -62,6 +62,15 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact }) => {
           >
             {contact.role}
           </p>
+          <p className="text-gray-800 font-semibold text-[14px] mt-1 break-words">
+            {contact.phone}
+          </p>
+          {contact.address && (
+            <p className="text-gray-500 font-medium text-[12px] mt-1 leading-snug break-words flex items-start gap-1">
+              <span className="shrink-0 mt-0.5 opacity-70">📍</span>
+              {contact.address}
+            </p>
+          )}
         </div>
       </div>
 
