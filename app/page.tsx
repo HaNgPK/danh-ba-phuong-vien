@@ -50,16 +50,16 @@ export default async function HomePage() {
                 </h2>
                 <p className="mt-2 text-sm text-slate-600">{village.address}</p>
 
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex flex-wrap gap-3">
                   <Link
                     href={`/${village.slug}`}
-                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                    className="flex-1 text-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
                   >
                     Xem công khai
                   </Link>
                   <Link
                     href={`/admin/${village.slug}`}
-                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700"
+                    className="flex-1 text-center whitespace-nowrap rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
                   >
                     Quản trị
                   </Link>

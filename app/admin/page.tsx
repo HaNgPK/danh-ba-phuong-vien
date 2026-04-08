@@ -69,19 +69,19 @@ export default async function AdminIndexPage() {
             <div className="mt-5 flex flex-wrap gap-2">
               <Link
                 href={`/admin/${village.slug}/settings`}
-                className="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
+                className="flex-1 text-center whitespace-nowrap rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white"
               >
                 Settings route
               </Link>
               <Link
                 href={`/admin/${village.slug}`}
-                className="rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700"
+                className="flex-1 text-center whitespace-nowrap rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition"
               >
                 Workspace
               </Link>
               <Link
                 href={`/${village.slug}`}
-                className="rounded-2xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700"
+                className="flex-[100%] sm:flex-1 text-center whitespace-nowrap rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition"
               >
                 Xem public
               </Link>
