@@ -21,6 +21,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-easy-crop": "^5.5.7",
+    "react-select": "^5.10.2",
     "vaul": "^1.1.2"
   },
   "devDependencies": {

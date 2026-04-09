@@ -20,6 +20,7 @@ import {
 import DirectoryClient from "@/src/components/DirectoryClient";
 import Cropper from "react-easy-crop";
 import getCroppedImg from "@/src/utils/cropImage";
+import Select from "react-select";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "cau-hinh" | "thon-xom" | "danh-ba" | "xem-truoc";
@@ -77,6 +78,15 @@ const CATEGORY_PRESETS = [
   { value: "Trưởng các xóm", desc: "Cánh tay nối dài của chính quyền thôn" },
 ];
 
+const GROUP_OPTIONS = [
+  "Chung",
+  "Cấp uỷ chi bộ",
+  "Ban lãnh đạo thôn",
+  "Trưởng các chi hội đoàn thể",
+  "An ninh trật tự",
+  "Trưởng các xóm, tổ",
+];
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -98,10 +108,56 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
 }
 
 const inputCls =
-  "w-full rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 outline-none disabled:bg-slate-50 disabled:text-slate-500";
+  "w-full min-w-0 rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-400 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 outline-none disabled:bg-slate-50 disabled:text-slate-500";
 
-const selectCls =
-  "w-full rounded-xl border-2 border-slate-200 bg-white px-3.5 py-3 text-sm font-semibold text-slate-900 transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 outline-none";
+const customReactSelectStyles = {
+  control: (base: any, state: any) => ({
+    ...base,
+    borderRadius: '0.75rem', 
+    borderWidth: '2px',
+    borderColor: state.isFocused ? '#3b82f6' : '#e2e8f0',
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.15)' : 'none',
+    padding: '0.2rem 0.25rem',
+    fontWeight: '600',
+    fontSize: '0.875rem',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    transition: 'all 0.2s ease',
+    minHeight: '3rem',
+    cursor: 'pointer',
+    '&:hover': {
+      borderColor: state.isFocused ? '#3b82f6' : '#cbd5e1',
+    }
+  }),
+  valueContainer: (base: any) => ({ ...base, padding: '0 8px' }),
+  menu: (base: any) => ({
+    ...base,
+    borderRadius: '0.75rem',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+    overflow: 'hidden',
+    zIndex: 50,
+  }),
+  option: (base: any, state: any) => ({
+    ...base,
+    backgroundColor: state.isSelected ? '#2563eb' : state.isFocused ? '#f1f5f9' : '#ffffff',
+    color: state.isSelected ? '#ffffff' : '#475569',
+    cursor: 'pointer',
+    fontWeight: state.isSelected ? '700' : '500',
+    padding: '0.75rem 1rem',
+    fontSize: '0.875rem',
+    '&:active': { backgroundColor: '#3b82f6', color: 'white' }
+  }),
+};
+
+const groupSelectOptions = GROUP_OPTIONS.map(g => ({
+  value: g,
+  label: g === "Chung" ? "Không thuộc nhóm nào" : g
+}));
+
+const displayTypeOptions = [
+  { value: "normal", label: "Bình thường" },
+  { value: "highlight", label: "Nổi bật (viền màu)" }
+];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminPanel({
@@ -402,13 +458,13 @@ export default function AdminPanel({
                   />
                 </Field>
                 <Field label="Logo làng (URL hoặc Tải lên cắt vuông)" className="sm:col-span-2">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-2">
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="flex gap-2 min-w-0">
                       <input
                         value={villageForm.logoUrl || ""}
                         onChange={(e) => setVillageForm({ ...villageForm, logoUrl: e.target.value })}
                         placeholder="https://..."
-                        className={`flex-1 ${inputCls}`}
+                        className={`flex-1 min-w-0 ${inputCls}`}
                       />
                       <label className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl cursor-pointer hover:bg-slate-200 flex items-center justify-center gap-2 border-2 border-slate-200 transition shrink-0">
                         <Upload size={18} />
@@ -672,7 +728,7 @@ export default function AdminPanel({
                 </Field>
 
                 {/* Chức vụ */}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
                   <Field label="Chức vụ chính" required>
                     <input
                       value={contactForm.role}
@@ -683,38 +739,72 @@ export default function AdminPanel({
                     />
                   </Field>
                   
-                  <div className="mt-3 space-y-2">
+                  <Field label="Nhóm / Đoàn thể">
+                    <Select
+                      options={groupSelectOptions}
+                      value={groupSelectOptions.find(o => o.value === contactForm.category) || groupSelectOptions[0]}
+                      onChange={(selected: any) => setContactForm({ ...contactForm, category: selected?.value || "Chung" })}
+                      styles={customReactSelectStyles}
+                      isSearchable={false}
+                      placeholder="Chọn nhóm..."
+                    />
+                  </Field>
+                </div>
+                
+                <div className="sm:col-span-2">
+                  <div className="mt-3 space-y-3">
                     <p className="text-sm font-semibold text-slate-700">Chức vụ kiêm nhiệm</p>
-                    {contactForm.additionalRoles.map((role, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          value={role}
-                          onChange={(e) => {
-                            const newRoles = [...contactForm.additionalRoles];
-                            newRoles[idx] = e.target.value;
-                            setContactForm({ ...contactForm, additionalRoles: newRoles });
-                          }}
-                          placeholder="vd: Trưởng ban Công tác mặt trận"
-                          className={inputCls}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newRoles = contactForm.additionalRoles.filter((_, i) => i !== idx);
-                            setContactForm({ ...contactForm, additionalRoles: newRoles });
-                          }}
-                          className="shrink-0 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    ))}
+                    {contactForm.additionalRoles.map((roleStr, idx) => {
+                      const isEncoded = roleStr.includes("|::|");
+                      const currentGroup = isEncoded ? roleStr.split("|::|")[0] : "Chung";
+                      const currentRoleText = isEncoded ? roleStr.split("|::|")[1] : roleStr;
+
+                      return (
+                        <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                          <div className="w-full sm:w-1/3 min-w-[200px]">
+                            <Select
+                              options={groupSelectOptions.map(o => ({...o, label: o.value === "Chung" ? "Không rõ nhóm" : o.label}))}
+                              value={groupSelectOptions.find(o => o.value === currentGroup) || groupSelectOptions[0]}
+                              onChange={(selected: any) => {
+                                const newRoles = [...contactForm.additionalRoles];
+                                newRoles[idx] = `${selected?.value || "Chung"}|::|${currentRoleText}`;
+                                setContactForm({ ...contactForm, additionalRoles: newRoles });
+                              }}
+                              styles={customReactSelectStyles}
+                              isSearchable={false}
+                              menuPlacement="auto"
+                            />
+                          </div>
+                          
+                          <input
+                            value={currentRoleText}
+                            onChange={(e) => {
+                              const newRoles = [...contactForm.additionalRoles];
+                              newRoles[idx] = `${currentGroup}|::|${e.target.value}`;
+                              setContactForm({ ...contactForm, additionalRoles: newRoles });
+                            }}
+                            placeholder="Tên chức vụ..."
+                            className={inputCls + " flex-1"}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newRoles = contactForm.additionalRoles.filter((_, i) => i !== idx);
+                              setContactForm({ ...contactForm, additionalRoles: newRoles });
+                            }}
+                            className="shrink-0 p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      );
+                    })}
                     <button
                       type="button"
                       onClick={() => {
                         setContactForm({
                           ...contactForm,
-                          additionalRoles: [...contactForm.additionalRoles, ""],
+                          additionalRoles: [...contactForm.additionalRoles, "Chung|::|"],
                         });
                       }}
                       className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2 py-1.5"
@@ -808,14 +898,13 @@ export default function AdminPanel({
 
                 {/* Kiểu hiển thị */}
                 <Field label="Kiểu hiển thị">
-                  <select
-                    value={contactForm.displayType}
-                    onChange={(e) => setContactForm({ ...contactForm, displayType: e.target.value })}
-                    className={selectCls}
-                  >
-                    <option value="normal">Bình thường</option>
-                    <option value="highlight">Nổi bật (viền màu)</option>
-                  </select>
+                  <Select
+                    options={displayTypeOptions}
+                    value={displayTypeOptions.find(o => o.value === contactForm.displayType) || displayTypeOptions[0]}
+                    onChange={(selected: any) => setContactForm({ ...contactForm, displayType: selected?.value || "normal" })}
+                    styles={customReactSelectStyles}
+                    isSearchable={false}
+                  />
                 </Field>
 
                 {/* Loại bỏ nhóm chức năng theo yêu cầu */}
@@ -1022,7 +1111,7 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={className}>
+    <div className={`min-w-0 ${className || ""}`}>
       <Label required={required}>{label}</Label>
       {children}
     </div>

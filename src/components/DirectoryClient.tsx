@@ -102,6 +102,14 @@ function normalizeSections(scopes?: any[]) {
   }));
 }
 
+const GROUP_OPTIONS = [
+  "Cấp uỷ chi bộ",
+  "Ban lãnh đạo thôn",
+  "Trưởng các chi hội đoàn thể",
+  "An ninh trật tự",
+  "Trưởng các xóm, tổ",
+];
+
 export default function DirectoryClient({
   village,
   contacts,
@@ -114,17 +122,32 @@ export default function DirectoryClient({
   buttons?: any[];
 }) {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 
   const socialButtons = (buttons ?? []).filter((button: any) => button.type !== "emergency");
   const primarySocialButton = socialButtons[0];
   const secondarySocialButton = socialButtons[1];
 
-  const filteredContacts = contacts.filter(
-    (c) =>
+  const filteredContacts = contacts.filter((c) => {
+    const matchSearch =
       c.fullName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       c.role.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      c.phone.includes(searchKeyword)
-  );
+      c.phone.includes(searchKeyword);
+      
+    const additionalGroups = (c.additionalRoles || [])
+      .map((roleStr: string) => roleStr.includes("|::|") ? roleStr.split("|::|")[0] : "Chung");
+    const allGroups = [c.category, ...additionalGroups];
+      
+    const matchGroup = selectedGroups.length === 0 || selectedGroups.some(g => allGroups.includes(g));
+    
+    return matchSearch && matchGroup;
+  });
+
+  const toggleGroup = (group: string) => {
+    setSelectedGroups((prev) =>
+      prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans text-gray-800">
@@ -298,8 +321,9 @@ export default function DirectoryClient({
             </p>
           </div>
 
-          <div className="sticky top-[80px] z-40 relative">
-            <div className="relative">
+          <div className="sticky top-[80px] z-40 bg-[#F4F7FB] pt-2 pb-4 border-b border-transparent">
+            {/* Search Bar */}
+            <div className="relative z-50">
               <input
                 type="text"
                 value={searchKeyword}
@@ -310,6 +334,36 @@ export default function DirectoryClient({
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                 <Users size={20} />
               </div>
+            </div>
+
+            {/* Group Filter */}
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
+              <button
+                onClick={() => setSelectedGroups([])}
+                className={`snap-start shrink-0 px-4 py-2 rounded-full text-[13px] font-bold border transition-all ${
+                  selectedGroups.length === 0
+                    ? "bg-slate-800 text-white border-slate-800 shadow-sm"
+                    : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                Tất cả
+              </button>
+              {GROUP_OPTIONS.map((g) => {
+                const isActive = selectedGroups.includes(g);
+                return (
+                  <button
+                    key={g}
+                    onClick={() => toggleGroup(g)}
+                    className={`snap-start shrink-0 px-4 py-2 rounded-full text-[13px] font-bold border transition-all ${
+                      isActive
+                        ? "bg-blue-100 text-blue-700 border-blue-200 shadow-sm"
+                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
