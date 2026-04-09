@@ -157,6 +157,7 @@ export default function AdminPanel({
     categoryDesc: "",
     fullName: "",
     role: "",
+    additionalRoles: [] as string[],
     phone: "",
     address: "",
     avatarUrl: "",
@@ -314,6 +315,7 @@ export default function AdminPanel({
       categoryDesc: c.categoryDesc ?? "",
       fullName: c.fullName,
       role: c.role,
+      additionalRoles: (c as any).additionalRoles || [],
       phone: c.phone,
       address: c.address ?? "",
       avatarUrl: c.avatarUrl ?? "",
@@ -670,15 +672,57 @@ export default function AdminPanel({
                 </Field>
 
                 {/* Chức vụ */}
-                <Field label="Chức vụ / Chức danh" required>
-                  <input
-                    value={contactForm.role}
-                    onChange={(e) => setContactForm({ ...contactForm, role: e.target.value })}
-                    placeholder="vd: Bí thư Chi bộ"
-                    className={inputCls}
-                    required
-                  />
-                </Field>
+                <div className="sm:col-span-2">
+                  <Field label="Chức vụ chính" required>
+                    <input
+                      value={contactForm.role}
+                      onChange={(e) => setContactForm({ ...contactForm, role: e.target.value })}
+                      placeholder="vd: Bí thư Chi bộ"
+                      className={inputCls}
+                      required
+                    />
+                  </Field>
+                  
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm font-semibold text-slate-700">Chức vụ kiêm nhiệm</p>
+                    {contactForm.additionalRoles.map((role, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          value={role}
+                          onChange={(e) => {
+                            const newRoles = [...contactForm.additionalRoles];
+                            newRoles[idx] = e.target.value;
+                            setContactForm({ ...contactForm, additionalRoles: newRoles });
+                          }}
+                          placeholder="vd: Trưởng ban Công tác mặt trận"
+                          className={inputCls}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newRoles = contactForm.additionalRoles.filter((_, i) => i !== idx);
+                            setContactForm({ ...contactForm, additionalRoles: newRoles });
+                          }}
+                          className="shrink-0 p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setContactForm({
+                          ...contactForm,
+                          additionalRoles: [...contactForm.additionalRoles, ""],
+                        });
+                      }}
+                      className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-2 py-1.5"
+                    >
+                      <Plus size={16} /> Thêm chức vụ kiêm nhiệm
+                    </button>
+                  </div>
+                </div>
 
                 {/* SĐT */}
                 <Field label="Số điện thoại" required>

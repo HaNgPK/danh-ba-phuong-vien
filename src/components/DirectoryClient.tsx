@@ -129,11 +129,11 @@ export default function DirectoryClient({
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans text-gray-800">
       <header className="bg-[#122A54] text-white p-3 md:p-4 flex items-center gap-3 sticky top-0 z-50 shadow-md">
-        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm overflow-hidden">
+        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
           {village?.logoUrl ? (
             <img src={village.logoUrl} alt={village.fullName} className="w-full h-full object-cover" />
           ) : (
-            <Building2 className="text-[#122A54] w-full h-full" />
+            <Building2 className="text-[#122A54] w-2/3 h-2/3" />
           )}
         </div>
         <div className="flex flex-col">
@@ -157,11 +157,11 @@ export default function DirectoryClient({
         />
 
         <div className="relative z-10 flex flex-col items-center">
-          <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 p-2 border-4 border-white/20 overflow-hidden">
+          <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-lg mb-4 border-4 border-white/20 overflow-hidden">
             {village?.logoUrl ? (
-              <img src={village.logoUrl} alt={village.fullName} className="w-full h-full rounded-full object-cover" />
+              <img src={village.logoUrl} alt={village.fullName} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full rounded-full border-2 border-dashed border-blue-900 flex items-center justify-center text-blue-900 font-bold text-xs">
+              <div className="w-full h-full rounded-full border-2 border-dashed border-blue-900 flex items-center justify-center text-blue-900 font-bold text-xs p-2">
                 LOGO
               </div>
             )}

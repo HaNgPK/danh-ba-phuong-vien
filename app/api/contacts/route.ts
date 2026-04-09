@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { villageId, scope, category, categoryDesc, fullName, role, phone, address, avatarUrl, displayType } = body;
+    const { villageId, scope, category, categoryDesc, fullName, role, additionalRoles, phone, address, avatarUrl, displayType } = body;
     if (!villageId) return NextResponse.json({ error: 'Missing villageId' }, { status: 400 });
     if (!fullName || !role || !phone) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
 
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
         categoryDesc: categoryDesc || null,
         fullName,
         role,
+        additionalRoles: additionalRoles || [],
         phone,
         address: address || null,
         avatarUrl: avatarUrl || null,

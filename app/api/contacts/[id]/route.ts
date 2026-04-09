@@ -28,6 +28,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         fullName: body.fullName,
         avatarUrl: body.avatarUrl,
         role: body.role,
+        additionalRoles: body.additionalRoles,
         phone: body.phone,
         address: body.address,
         displayType: body.displayType,

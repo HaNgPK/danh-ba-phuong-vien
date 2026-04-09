@@ -7,21 +7,22 @@ datasource db {
 }
 
 model Contact {
-  id           String   @id @default(cuid())
-  scope        String
-  category     String
-  categoryDesc String?
-  fullName     String
-  avatarUrl    String?
-  role         String
-  phone        String
-  address      String?
-  displayType  String   @default("normal")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  scope           String
+  category        String
+  categoryDesc    String?
+  fullName        String
+  avatarUrl       String?
+  role            String
+  additionalRoles String[] @default([])
+  phone           String
+  address         String?
+  displayType     String   @default("normal")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  villageId    String
-  village      Village  @relation(fields: [villageId], references: [id])
+  villageId       String
+  village         Village  @relation(fields: [villageId], references: [id])
 
   @@index([villageId])
 }

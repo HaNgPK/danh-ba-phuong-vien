@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 
 export async function POST(request: Request) {
   try {
@@ -11,21 +9,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'No file uploaded' }, { status: 400 });
     }
 
+    const imgbbKey = process.env.IMGBB_API_KEY;
+
+    if (!imgbbKey || imgbbKey === "" || imgbbKey === "Điền-API-Key-Của-Bạn-Vào-Đây") {
+      console.warn("IMGBB_API_KEY is missing or invalid in .env file.");
+      return NextResponse.json({ success: false, error: 'ImgBB API key is not configured.' }, { status: 500 });
+    }
+
+    // Prepare FormData for ImgBB by converting the File to a Base64 string.
+    // This is much safer for Node.js fetch which can sometimes fail to serialize raw File streams to external APIs.
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const base64Image = buffer.toString('base64');
 
-    // generate unique filename to avoid collisions
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const safeName = file.name ? file.name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'upload.png';
-    const filename = uniqueSuffix + '-' + safeName;
-    const path = join(process.cwd(), 'public', 'uploads', filename);
+    const formData = new FormData();
+    formData.append('key', imgbbKey);
+    formData.append('name', file.name || 'image');
+    formData.append('image', base64Image);
 
-    await writeFile(path, buffer);
-    const url = `/uploads/${filename}`;
+    // Call ImgBB API
+    const res = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body: formData,
+    });
 
-    return NextResponse.json({ success: true, url });
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    return NextResponse.json({ success: false, error: 'Upload failed' }, { status: 500 });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData?.error?.message || 'ImgBB API connection error');
+    }
+
+    const imgbbData = await res.json();
+
+    if (imgbbData.success) {
+      // Return the direct display URL from ImgBB
+      return NextResponse.json({ success: true, url: imgbbData.data.url });
+    } else {
+      throw new Error('ImgBB returned success: false');
+    }
+
+  } catch (error: any) {
+    console.error('Error uploading file to ImgBB:', error);
+    return NextResponse.json({ success: false, error: 'Upload failed', details: error?.message }, { status: 500 });
   }
 }
