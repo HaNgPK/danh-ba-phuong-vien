@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Drawer } from "vaul";
 import {
@@ -21,6 +21,8 @@ import {
   Phone,
   ExternalLink,
   Lock as LockIcon,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import { ContactCard } from "@/src/components/ContactCard";
 
@@ -110,6 +112,41 @@ const GROUP_OPTIONS = [
   "Trưởng các xóm, tổ",
 ];
 
+const GROUP_DESCRIPTIONS: Record<string, string> = {
+  "Cap uy chi bo": "Cơ quan lãnh đạo toàn diện",
+  "Ban lanh dao thon": "Cơ quan quản lý hành chính nhà nước tại cơ sở",
+  "An ninh trat tu": "Lực lượng nòng cốt bảo vệ bình yên xóm làng",
+  "Truong cac chi hoi doan the": "Hệ thống chính trị - xã hội",
+  "Ban tri su": "Quản lý di tích văn hóa tín ngưỡng",
+  "Truong cac xom": "Cánh tay nối dài của chính quyền thôn",
+  default: "Các bộ phận và liên hệ khác",
+};
+
+const GROUP_TO_STYLE_KEY: Record<string, string> = {
+  "Cấp uỷ chi bộ": "Cap uy chi bo",
+  "Cấp ủy chi bộ": "Cap uy chi bo",
+  "Ban lãnh đạo thôn": "Ban lanh dao thon",
+  "An ninh trật tự": "An ninh trat tu",
+  "Trưởng các chi hội đoàn thể": "Truong cac chi hoi doan the",
+  "Ban trị sự": "Ban tri su",
+  "Trưởng các xóm, tổ": "Truong cac xom",
+  "Trưởng các xóm": "Truong cac xom"
+};
+
+const getStyleForGroup = (groupName: string) => {
+  const key = GROUP_TO_STYLE_KEY[groupName];
+  if (key && CATEGORY_STYLES[key]) {
+    return { ...CATEGORY_STYLES[key], description: GROUP_DESCRIPTIONS[key] };
+  }
+  
+  const normalized = groupName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  if (CATEGORY_STYLES[normalized]) {
+    return { ...CATEGORY_STYLES[normalized], description: GROUP_DESCRIPTIONS[normalized] || GROUP_DESCRIPTIONS.default };
+  }
+  
+  return { ...CATEGORY_STYLES.default, description: GROUP_DESCRIPTIONS.default };
+};
+
 export default function DirectoryClient({
   village,
   contacts,
@@ -123,6 +160,12 @@ export default function DirectoryClient({
 }) {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "group">("list");
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+
+  const toggleExpand = (groupName: string) => {
+    setExpandedGroup(prev => prev === groupName ? null : groupName);
+  };
 
   const socialButtons = (buttons ?? []).filter((button: any) => button.type !== "emergency");
   const primarySocialButton = socialButtons[0];
@@ -148,6 +191,33 @@ export default function DirectoryClient({
       prev.includes(group) ? prev.filter((g) => g !== group) : [...prev, group]
     );
   };
+
+  const groupedContacts = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    
+    filteredContacts.forEach((contact) => {
+      const additionalGroups = (contact.additionalRoles || [])
+        .map((roleStr: string) => roleStr.includes("|::|") ? roleStr.split("|::|")[0] : "Khác");
+      
+      const allGroups = Array.from(new Set([contact.category || "Khác", ...additionalGroups]));
+      
+      allGroups.forEach(g => {
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g)!.push(contact);
+      });
+    });
+    
+    const sortedGroups = Array.from(groups.entries()).sort((a, b) => {
+      const indexA = GROUP_OPTIONS.indexOf(a[0]);
+      const indexB = GROUP_OPTIONS.indexOf(b[0]);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a[0].localeCompare(b[0]);
+    });
+
+    return sortedGroups;
+  }, [filteredContacts]);
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans text-gray-800">
@@ -312,13 +382,29 @@ export default function DirectoryClient({
         </div>
 
         <div className="pt-6 space-y-4">
-          <div className="px-2 mb-2">
-            <h2 className="text-xl md:text-2xl font-black text-[#122A54] uppercase tracking-wide">
-              Danh bạ liên hệ
-            </h2>
-            <p className="text-[13px] md:text-sm text-gray-500 font-medium mt-1 leading-relaxed">
-              Thông tin liên lạc của các cấp ủy, ban lãnh đạo, cán bộ và người phụ trách trong làng.
-            </p>
+          <div className="px-2 mb-2 flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl md:text-2xl font-black text-[#122A54] uppercase tracking-wide">
+                Danh bạ liên hệ
+              </h2>
+              <p className="text-[13px] md:text-sm text-gray-500 font-medium mt-1 leading-relaxed">
+                Thông tin liên lạc của các cấp ủy, ban lãnh đạo, cán bộ và người phụ trách trong làng.
+              </p>
+            </div>
+            <div className="flex bg-slate-200/60 p-1 rounded-xl self-start md:self-auto border border-slate-200">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <List size={16} /> Danh sách
+              </button>
+              <button
+                onClick={() => setViewMode('group')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${viewMode === 'group' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <LayoutGrid size={16} /> Nhóm
+              </button>
+            </div>
           </div>
 
           <div className="sticky top-[80px] z-40 bg-[#F4F7FB] pt-2 pb-4 border-b border-transparent">
@@ -376,11 +462,73 @@ export default function DirectoryClient({
                 <p className="font-bold text-slate-600 text-lg">Không tìm thấy liên hệ</p>
                 <p className="text-sm mt-1 text-slate-400">Hãy thử nhập từ khóa khác</p>
               </div>
-            ) : (
+            ) : viewMode === "list" ? (
               <div className="flex flex-col gap-3">
                 {filteredContacts.map((contact) => (
                   <ContactCard key={contact.id} contact={contact} />
                 ))}
+              </div>
+            ) : (
+              <div className="columns-1 md:columns-2 gap-4 w-full">
+                {groupedContacts.map(([groupName, groupContacts]) => {
+                  const styleToUse = getStyleForGroup(groupName);
+                  const isExpanded = expandedGroup === groupName;
+                  
+                  return (
+                    <div 
+                      key={groupName} 
+                      className={`break-inside-avoid mb-4 border rounded-[20px] transition-all duration-300 shadow-sm hover:shadow-md ${styleToUse.bg} ${styleToUse.border}`}
+                    >
+                      <button 
+                        onClick={() => toggleExpand(groupName)}
+                        className="w-full text-left p-4 flex items-center justify-between gap-4 focus:outline-none"
+                      >
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className={`p-3 rounded-xl flex-shrink-0 ${styleToUse.iconBg} ${styleToUse.iconColor}`}>
+                            {React.createElement(styleToUse.icon, { size: 22 })}
+                          </div>
+                          <div>
+                            <h3 className={`font-bold text-[14px] md:text-[15px] uppercase tracking-wide leading-tight ${styleToUse.text}`}>
+                              {groupName} {village?.name ? ` ${village.name}` : ""}
+                            </h3>
+                            <p className="text-xs font-medium text-slate-500 mt-1">
+                              {styleToUse.description}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Show contact count on collapsed mode */}
+                          {!isExpanded && (
+                            <span className="bg-white/60 text-slate-500 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                              {groupContacts.length}
+                            </span>
+                          )}
+                          <div className={`p-1 rounded-full bg-white/50 text-slate-400 transition-transform duration-300 ${isExpanded ? "rotate-180 bg-white shadow-sm" : ""}`}>
+                            <ChevronDown size={18} />
+                          </div>
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className={`p-4 pt-2 border-t ${styleToUse.border} flex flex-col gap-3 bg-white/40`}>
+                              {groupContacts.map((contact) => (
+                                <ContactCard key={`${contact.id}-${groupName}`} contact={contact} />
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
